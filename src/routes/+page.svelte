@@ -96,7 +96,6 @@
 				</div>
 			</div>
 		</div>
-		<BookingRequests />
 	</div>
 	<div class="right-section">
 		<Calendar />

@@ -51,6 +51,7 @@
 			</div>
 		</div>
 	</nav>
+	<img src="./images/background.png" alt="background" class="background" />
 {/if}
 
 {#if isNavbar2}
@@ -94,6 +95,11 @@
 		min-height: 100vh;
 		color: #333;
 		line-height: 1.6;
+	}
+
+	.background {
+		position: absolute;
+		z-index: 1;
 	}
 
 	.navbar {
@@ -196,6 +202,7 @@
 		max-width: 1536px;
 		margin: 0 auto;
 		width: 100%;
+		z-index: 2;
 	}
 
 	@media (max-width: 768px) {

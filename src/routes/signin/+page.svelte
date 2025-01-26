@@ -18,7 +18,7 @@
 		serverError = '';
 
 		try {
-			const response = await fetch('http://localhost:3000/api/auth/signin', {
+			const response = await fetch('http://localhost:3000/api/auth/signin/landlord', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -37,8 +37,8 @@
 			}
 
 			const data = await response.json();
-			toast.error('Login Successful!', {
-				description: `Welcome ${data.firstName}`
+			toast.success('Login Successful!', {
+				description: `Welcome ${data.user.profile.firstName}`
 			});
 			localStorage.setItem('token', data.token);
 			window.location.href = '/';

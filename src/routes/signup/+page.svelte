@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
-	let username = '';
 	let email = '';
 	let password = '';
 	let confirmPassword = '';
@@ -48,7 +47,6 @@
 			});
 
 			const data = await response.json();
-
 			if (response.ok) {
 				localStorage.setItem('token', data.token);
 				toast.success('Account Created', { description: 'You have successfully signed up!' });
@@ -70,222 +68,222 @@
 	}
 </script>
 
-<div class="signup-container">
-	<div class="signup-card">
-		<h2 class="signup-title">Create Your Account</h2>
+<div class="create-account">
+	<h2>Create Your Account</h2>
+	<form on:submit|preventDefault={handleSubmit}>
+		<!-- <div class="form-group">
+			<label for="role">Role</label>
+			<select id="role" bind:value={role} required>
+				<option value="TENANT">Tenant</option>
+				<option value="LANDLORD">Landlord</option>
+			</select>
+		</div> -->
 
-		<form on:submit|preventDefault={handleSubmit}>
-			<div class="form-group">
-				<label for="firstName">First Name</label>
-				<input
-					id="firstName"
-					class="form-input"
-					type="text"
-					bind:value={firstName}
-					required
-					placeholder="Enter your first name"
-				/>
-			</div>
+		<div class="form-group">
+			<label for="firstName">First Name</label>
+			<input
+				id="firstName"
+				type="text"
+				placeholder="Enter your First Name"
+				bind:value={firstName}
+				required
+			/>
+		</div>
 
-			<div class="form-group">
-				<label for="lastName">Last Name</label>
-				<input
-					id="lastName"
-					class="form-input"
-					type="text"
-					bind:value={lastName}
-					required
-					placeholder="Enter your last name"
-				/>
-			</div>
+		<div class="form-group">
+			<label for="lastName">Last Name</label>
+			<input
+				id="lastName"
+				type="text"
+				placeholder="Enter your Last Name"
+				bind:value={lastName}
+				required
+			/>
+		</div>
 
-			<div class="form-group">
-				<label for="email">Email Address</label>
-				<input
-					id="email"
-					class="form-input"
-					type="email"
-					bind:value={email}
-					required
-					placeholder="example@gmail.com"
-				/>
-			</div>
+		<div class="form-group">
+			<label for="email">Email Address</label>
+			<input id="email" type="email" placeholder="example@gmail.com" bind:value={email} required />
+		</div>
 
-			<div class="form-group">
-				<label for="phone">Phone Number</label>
-				<input
-					id="phone"
-					class="form-input"
-					type="tel"
-					inputmode="numeric"
-					bind:value={phone}
-					on:input={handlePhoneInput}
-					required
-					placeholder="09171234567"
-				/>
-				{#if phoneError}
-					<div class="error-message">{phoneError}</div>
-				{/if}
-			</div>
-
-			<div class="form-group">
-				<label for="password">Password</label>
-				<input
-					id="password"
-					class="form-input"
-					type="password"
-					bind:value={password}
-					required
-					placeholder="Enter your password"
-				/>
-			</div>
-
-			<div class="form-group">
-				<label for="confirmPassword">Confirm Password</label>
-				<input
-					id="confirmPassword"
-					class="form-input"
-					type="password"
-					bind:value={confirmPassword}
-					required
-					placeholder="Confirm your password"
-				/>
-			</div>
-
-			{#if passwordError}
-				<div class="error-message">{passwordError}</div>
+		<div class="form-group">
+			<label for="phone">Phone Number</label>
+			<input
+				id="phone"
+				type="tel"
+				inputmode="numeric"
+				placeholder="09171234567"
+				bind:value={phone}
+				on:input={handlePhoneInput}
+				required
+			/>
+			{#if phoneError}
+				<div class="error-message">{phoneError}</div>
 			{/if}
+		</div>
 
-			{#if generalError}
-				<div class="error-message">{generalError}</div>
-			{/if}
-			<div class="links">
-				<p>Already have an account? <a href="./signin">Signin</a></p>
-			</div>
-			<button type="submit" class="submit-btn">Create Account</button>
-		</form>
-	</div>
+		<div class="form-group">
+			<label for="password">Password</label>
+			<input
+				id="password"
+				type="password"
+				placeholder="**********"
+				bind:value={password}
+				required
+			/>
+		</div>
+
+		<div class="form-group">
+			<label for="confirmPassword">Confirm Password</label>
+			<input
+				id="confirmPassword"
+				type="password"
+				placeholder="**********"
+				bind:value={confirmPassword}
+				required
+			/>
+		</div>
+
+		{#if passwordError}
+			<div class="error-message">{passwordError}</div>
+		{/if}
+		<div class="links">
+			<p>Already have an account? <a href="./signin">Signin</a></p>
+		</div>
+
+		<div class="action-buttons">
+			<a href="./" class="action-button close">Close</a>
+			<button class="action-button" type="submit">Submit</button>
+		</div>
+	</form>
 </div>
 
 <style>
-	* {
-		box-sizing: border-box;
-		font-family: 'Inter';
-	}
-
-	.signup-container {
-		display: flex;
-		min-height: 100%;
-		justify-content: center;
-		align-items: start;
-		overflow: auto;
-	}
-
-	.signup-card {
-		background: white;
-		border-radius: 16px;
-		box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-		padding: 40px;
-		width: 100%;
-		max-width: 500px;
+	:global(html, body) {
+		margin: 0;
+		padding: 0;
 		height: 100%;
-		transition: all 0.3s ease;
+		background-color: #dbdbdb;
 	}
 
-	.signup-card:hover {
-		transform: translateY(-10px);
-		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-	}
-
-	.signup-title {
+	.create-account {
 		text-align: center;
+		padding: 0.6rem;
+		border-radius: 12px;
+		background: rgba(255, 255, 255, 0.8);
+		box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+		width: 410px;
+		max-width: 100%;
+		margin: 0 auto;
+		margin-top: 2rem;
+		position: relative;
+	}
+
+	.create-account h2 {
+		margin-bottom: 0.8rem;
 		color: #333;
-		margin-bottom: 30px;
-		font-size: 24px;
-		font-weight: 700;
+		font-size: 1.3rem;
+		font-weight: bold;
 	}
 
 	.form-group {
-		margin-bottom: 5px;
+		display: flex;
+		flex-direction: column;
+		width: 80%;
+		max-width: 240px;
+		margin: 0.5rem auto;
+		text-align: left;
 	}
 
 	.form-group label {
-		display: block;
-		margin-bottom: 8px;
+		font-size: 0.8rem;
 		color: #555;
-		font-weight: 600;
+		margin-bottom: 0.2rem;
+		font-weight: 500;
 	}
 
-	.form-input {
+	.form-group input,
+	.form-group select {
 		width: 100%;
-		padding: 12px 15px;
-		border: 2px solid #e0e0e0;
-		border-radius: 8px;
-		font-size: 16px;
-		transition: all 0.3s ease;
+		padding: 0.5rem;
+		border: 1px solid #ccc;
+		border-radius: 6px;
+		font-size: 0.85rem;
+		outline: none;
+		box-shadow: none;
 	}
 
-	.form-input:focus {
-		border-color: #667eea;
+	.form-group input:focus,
+	.form-group select:focus {
+		border-color: #ff6a00;
 		outline: none;
-		box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+		box-shadow: none;
 	}
 
 	.error-message {
-		color: #ff4b4b;
-		font-size: 14px;
-		margin-top: 8px;
-		animation: shake 0.4s linear;
+		color: #ff6a00;
+		font-size: 0.85rem;
+		margin-top: 0.5rem;
 	}
 
-	.submit-btn {
-		width: 100%;
-		padding: 15px;
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-		color: white;
-		border: none;
-		border-radius: 8px;
-		font-size: 18px;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.3s ease;
-		margin-top: 10px;
-	}
-
-	.submit-btn:hover {
-		opacity: 0.9;
-		transform: translateY(-3px);
-	}
-
-	.role-selector {
+	.action-buttons {
 		display: flex;
-		gap: 5px;
-		margin-bottom: 20px;
+		justify-content: space-between;
+		align-items: center;
+		width: 90%;
+		max-width: 300px;
+		margin: 1rem auto 0;
 	}
 
-	.role-option {
-		flex: 1;
-		padding: 12px;
-		border: 2px solid #e0e0e0;
-		border-radius: 8px;
-		text-align: center;
+	.action-button {
+		background-color: #ff6a00;
+		color: #fff;
+		padding: 0.5rem 1rem;
+		border: none;
+		border-radius: 6px;
+		font-size: 0.9rem;
+		font-weight: bold;
 		cursor: pointer;
-		transition: all 0.3s ease;
+		margin: 0 10px;
+		text-decoration: none;
+		text-align: center;
 	}
 
-	.role-option.selected {
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-		color: white;
-		border-color: transparent;
+	.action-button:hover {
+		background-color: #e65a00;
 	}
 
-	@media (max-width: 600px) {
-		.signup-card {
-			padding: 20px;
+	.action-button.close {
+		background-color: #a7a7a7;
+		color: #fffbfb;
+	}
+
+	.action-button.close:hover {
+		background-color: #858585;
+	}
+
+	@media (max-width: 768px) {
+		.create-account {
+			width: 90%;
+			margin-top: 3rem;
 		}
 
-		.role-selector {
-			flex-direction: column;
+		.form-group {
+			width: 100%;
+		}
+
+		.create-account h2 {
+			font-size: 1.1rem;
+		}
+
+		.action-buttons {
+			width: 100%;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.create-account {
+			width: 95%;
 		}
 	}
 </style>
