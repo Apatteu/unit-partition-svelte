@@ -1,11 +1,13 @@
 <script>
 	import { page } from '$app/stores';
+	import { Toaster } from 'svelte-sonner';
+
 	import '../app.css';
 
 	let isMenuOpen = false;
 
-	const navbar1Pages = ['/signin', '/about', '/contact'];
-	const navbar2Pages = ['/', '/inventory', '/transactions', '/request'];
+	const navbar1Pages = ['/signin', '/about', '/contact', '/signup'];
+	const navbar2Pages = ['/', '/inventory', '/transactions', '/request', '/profile'];
 
 	$: isNavbar1 = navbar1Pages.includes($page.url.pathname);
 	$: isNavbar2 = navbar2Pages.includes($page.url.pathname);
@@ -15,7 +17,8 @@
 	}
 
 	function logOut() {
-		window.location.href = '/';
+		localStorage.removeItem('token');
+		window.location.href = '/signin';
 	}
 </script>
 
@@ -24,7 +27,7 @@
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
 	<link
-		href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;400;700&display=swap"
+		href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap"
 		rel="stylesheet"
 	/>
 	<link
@@ -34,115 +37,113 @@
 </svelte:head>
 
 {#if isNavbar1}
-	<div class="navbar">
-		<a href="/" class="logo mr-auto font-bold">Apateu</a>
-		<button
-			class="burger"
-			on:click={toggleMenu}
-			aria-label="Toggle navigation"
-			aria-expanded={isMenuOpen}
-		>
-			<div class="line"></div>
-			<div class="line"></div>
-			<div class="line"></div>
-		</button>
-		<div class={`navbar-links ${isMenuOpen ? 'open' : ''}`}>
-			<a href="/about">About</a>
-			<a href="/contact">Contact</a>
+	<nav class="navbar navbar-guest">
+		<div class="navbar-container">
+			<a href="/" class="logo">Apateu</a>
+			<div class="menu-toggle" on:click={toggleMenu}>
+				<span class="bar"></span>
+				<span class="bar"></span>
+				<span class="bar"></span>
+			</div>
+			<div class={`nav-menu ${isMenuOpen ? 'active' : ''}`}>
+				<a href="/about" class="nav-link">About</a>
+				<a href="/contact" class="nav-link">Contact</a>
+			</div>
 		</div>
-	</div>
+	</nav>
 {/if}
 
 {#if isNavbar2}
-	<div class="navbar">
-		<a href="/" class="logo mr-auto font-bold">Apateu</a>
-		<button
-			class="burger"
-			on:click={toggleMenu}
-			aria-label="Toggle navigation"
-			aria-expanded={isMenuOpen}
-		>
-			<div class="line"></div>
-			<div class="line"></div>
-			<div class="line"></div>
-		</button>
-		<div class={`navbar-links ${isMenuOpen ? 'open' : ''}`}>
-			<a href="/inventory">Units</a>
-			<a href="/transactions">Transactions</a>
-			<a href="/request">Maintenance</a>
-			<a href="/dashboard" class="profile-link">
-				<span>Profile</span>
-			</a>
-
-			<button on:click={logOut} class="logout-button">
-				<i class="fas fa-sign-out-alt"></i> Logout
-			</button>
+	<nav class="navbar navbar-user">
+		<div class="navbar-container">
+			<a href="/" class="logo">Apateu</a>
+			<div class="menu-toggle" on:click={toggleMenu}>
+				<span class="bar"></span>
+				<span class="bar"></span>
+				<span class="bar"></span>
+			</div>
+			<div class={`nav-menu ${isMenuOpen ? 'active' : ''}`}>
+				<a href="/inventory" class="nav-link">Units</a>
+				<a href="/transactions" class="nav-link">Transactions</a>
+				<a href="/request" class="nav-link">Maintenance</a>
+				<a href="/profile" class="nav-link profile-link">
+					<i class="fas fa-user-circle"></i>
+					<span>Profile</span>
+				</a>
+				<button on:click={logOut} class="logout-btn">
+					<i class="fas fa-sign-out-alt"></i>
+					Logout
+				</button>
+			</div>
 		</div>
-	</div>
+	</nav>
 {/if}
-
+<Toaster />
 <main class="main-content">
 	<slot></slot>
 </main>
 
-<style>
+<style lang="postcss">
 	:global(body) {
-		font-family: 'Poppins', sans-serif;
+		font-family: 'Inter', sans-serif;
 		margin: 0;
 		padding: 0;
-		background-color: #dbdbdb;
+		background-color: #f4f4f4;
 		display: flex;
 		flex-direction: column;
 		min-height: 100vh;
-		overflow-x: hidden; /* Prevent horizontal scrolling */
+		color: #333;
+		line-height: 1.6;
 	}
 
 	.navbar {
+		background-color: #2c3e50;
+		box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+		position: sticky;
+		top: 0;
+		z-index: 100;
+	}
+
+	.navbar-container {
 		display: flex;
-		align-items: center;
 		justify-content: space-between;
-		flex-wrap: wrap;
-		background-color: #515739;
-		padding: 0.5rem 1.5rem;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-		width: 100%;
-		position: relative;
-		z-index: 10;
+		align-items: center;
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 0.75rem 1rem;
 	}
 
-	.navbar a {
-		color: #ffffff;
-		text-decoration: none;
-		padding: 0.75rem 1.5rem;
-		font-size: 1rem;
-		border-radius: 0.5rem;
-		display: inline-block;
-		transition:
-			transform 0.2s,
-			background-color 0.2s,
-			box-shadow 0.3s;
-	}
-
-	.navbar a:hover {
-		background-color: #7a8357;
-		color: #ffffff;
-		box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-		transform: translateY(-3px);
-	}
-
-	.navbar .logo {
+	.logo {
+		color: white;
 		font-size: 1.5rem;
-		font-weight: bold;
-		transition:
-			transform 0.2s,
-			color 0.2s;
+		font-weight: 700;
+		text-decoration: none;
+		transition: color 0.3s ease;
 	}
 
-	.navbar-links {
+	.logo:hover {
+		color: #3498db;
+	}
+
+	.nav-menu {
 		display: flex;
 		align-items: center;
 		gap: 1rem;
-		position: relative; /* Ensure navbar is not affected by profile hover */
+	}
+
+	.nav-link {
+		color: white;
+		text-decoration: none;
+		padding: 0.5rem 1rem;
+		border-radius: 4px;
+		transition:
+			background-color 0.3s ease,
+			transform 0.2s ease;
+	}
+
+	.nav-link:hover {
+		background-color: rgba(255, 255, 255, 0.1);
+		transform: translateY(-2px);
 	}
 
 	.profile-link {
@@ -151,95 +152,86 @@
 		gap: 0.5rem;
 	}
 
-	.avatar-icon {
-		width: 24px;
-		height: 24px;
-		border-radius: 50%;
-		vertical-align: middle;
+	.profile-link i {
+		font-size: 1.2rem;
 	}
 
-	.logout-button {
-		background: none;
+	.logout-btn {
+		background-color: #e74c3c;
+		color: white;
 		border: none;
-		color: #ffffff;
-		font-size: 1rem;
+		padding: 0.5rem 1rem;
+		border-radius: 4px;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
 		cursor: pointer;
-		padding: 0.75rem 1.5rem;
 		transition:
-			transform 0.2s,
-			background-color 0.2s,
-			box-shadow 0.3s;
+			background-color 0.3s ease,
+			transform 0.2s ease;
 	}
 
-	.logout-button:hover {
-		background-color: #7a8357;
-		box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-		transform: translateY(-3px);
-		border-radius: 10px;
+	.logout-btn:hover {
+		background-color: #c0392b;
+		transform: translateY(-2px);
 	}
 
-	.burger {
+	.menu-toggle {
 		display: none;
 		flex-direction: column;
 		cursor: pointer;
-		background: none;
-		border: none;
-		position: absolute;
-		top: 0.5rem;
-		right: 1.5rem;
 	}
 
-	.line {
-		width: 20px;
-		height: 2px;
-		background-color: #ffffff;
+	.bar {
+		width: 25px;
+		height: 3px;
+		background-color: white;
 		margin: 3px 0;
-		transition: 0.3s;
+		transition: 0.4s;
 	}
 
 	.main-content {
 		flex: 1;
 		padding: 2rem;
-		display: flex;
-		flex-direction: column;
-		justify-content: flex-start; /* Adjust alignment */
-		min-height: 0; /* Prevents flex container from shrinking */
+		max-width: 1536px;
+		margin: 0 auto;
+		width: 100%;
 	}
 
 	@media (max-width: 768px) {
-		.navbar {
-			flex-direction: column;
-			align-items: flex-start;
-		}
-
-		.burger {
+		.menu-toggle {
 			display: flex;
-			top: 1rem;
-			right: 1.5rem;
 		}
 
-		.navbar-links {
+		.nav-menu {
 			display: none;
 			flex-direction: column;
 			width: 100%;
+			position: absolute;
+			top: 100%;
+			left: 0;
+			background-color: #2c3e50;
+			padding: 1rem;
+			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 		}
 
-		.navbar-links.open {
+		.nav-menu.active {
 			display: flex;
 		}
 
-		.navbar a {
+		.nav-link,
+		.logout-btn {
 			width: 100%;
-			text-align: left;
-			padding: 1rem;
+			text-align: center;
+			margin: 0.5rem 0;
+		}
+
+		.navbar-container {
+			position: relative;
 		}
 	}
 
 	@media (max-width: 480px) {
-		.navbar .logo {
-			font-size: 1.1rem;
-		}
-
 		.main-content {
 			padding: 1rem;
 		}

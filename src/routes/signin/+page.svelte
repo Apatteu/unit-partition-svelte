@@ -1,12 +1,16 @@
 <script>
+	import { toast } from 'svelte-sonner';
+
 	let email = '';
 	let password = '';
 	let passwordError = '';
-	let serverError = ''; // To display backend errors
+	let serverError = '';
 
 	async function handleSubmit() {
 		if (!email || !password) {
 			passwordError = 'Both fields are required';
+			toast.error('Fields Required', { description: 'Please ensure to input email and password.' });
+
 			return;
 		}
 
@@ -25,11 +29,17 @@
 			if (!response.ok) {
 				const errorData = await response.json();
 				serverError = errorData.message || 'Login failed';
+				toast.error('Login Failed', {
+					description: 'Check if there is error in your credentials.'
+				});
+
 				return;
 			}
 
 			const data = await response.json();
-			console.log('Login successful:', data);
+			toast.error('Login Successful!', {
+				description: `Welcome ${data.firstName}`
+			});
 			localStorage.setItem('token', data.token);
 			window.location.href = '/';
 		} catch (error) {
@@ -66,9 +76,9 @@
 					bind:value={password}
 					required
 				/>
-				<p class="forgot-password">
+				<!-- <p class="forgot-password">
 					<a href="/forgot-password">Forgot Password?</a>
-				</p>
+				</p> -->
 			</div>
 
 			{#if passwordError}
