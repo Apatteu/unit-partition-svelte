@@ -100,6 +100,7 @@
 	.background {
 		position: absolute;
 		z-index: 1;
+		width: 100%;
 	}
 
 	.navbar {
