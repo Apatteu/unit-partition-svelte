@@ -39,7 +39,7 @@
 {#if isNavbar1}
 	<nav class="navbar navbar-guest">
 		<div class="navbar-container">
-			<a href="/" class="logo">Apateu</a>
+			<a href="/" class="logo">Apateu Unit Partition</a>
 			<div class="menu-toggle" on:click={toggleMenu}>
 				<span class="bar"></span>
 				<span class="bar"></span>
@@ -57,7 +57,7 @@
 {#if isNavbar2}
 	<nav class="navbar navbar-user">
 		<div class="navbar-container">
-			<a href="/" class="logo">Apateu</a>
+			<a href="/" class="logo">Apateu Unit Partition</a>
 			<div class="menu-toggle" on:click={toggleMenu}>
 				<span class="bar"></span>
 				<span class="bar"></span>
@@ -65,8 +65,8 @@
 			</div>
 			<div class={`nav-menu ${isMenuOpen ? 'active' : ''}`}>
 				<a href="/inventory" class="nav-link">Units</a>
-				<a href="/transactions" class="nav-link">Transactions</a>
-				<a href="/request" class="nav-link">Maintenance</a>
+				<!-- <a href="/transactions" class="nav-link">Transactions</a>
+				<a href="/request" class="nav-link">Maintenance</a> -->
 				<a href="/profile" class="nav-link profile-link">
 					<i class="fas fa-user-circle"></i>
 					<span>Profile</span>

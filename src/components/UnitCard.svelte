@@ -26,8 +26,7 @@
 			>
 				{unit.status}
 			</span>
-			<button class="btn-inventory btn-blue-inventory" on:click={() => onDetails(unit)}
-				>Details</button
+			<button class="btn-inventory btn-blue-inventory" on:click={() => onDetails(unit)}>Edit</button
 			>
 		</div>
 	</div>
