@@ -1,357 +1,299 @@
 <script lang="ts">
-    import type { PageData } from './$types';
-    import { page } from '$app/stores';
-    import { Table, TableBody, TableBodyCell, GradientButton, TableBodyRow, TableHead, TableHeadCell, Checkbox, Pagination, Button, Dropdown, DropdownItem, Search, Label, Select, Modal, Input } from 'flowbite-svelte';
+	import type { PageData } from './$types';
+	import { paymentService } from '../../services/payment.services';
 
-    let { data }: { data: PageData } = $props();
-    let searchTerm = $state('');
-    let showModal = $state(false);
-    let showEditModal = $state(false);
-    let editingTransaction = $state({
-    paymentFrom: '',
-    amount: '',
-    unit: '',
-    dueDate: '',
-    status: 'pending'
-});
+	interface Transaction {
+		id?: string;
+		paymentFrom: string;
+		amount: string;
+		unit: string;
+		dueDate: string;
+		status: 'pending' | 'paid' | 'not_paid';
+	}
 
-interface transaction {
-    paymentFrom: string;
-    amount: string;
-    unit: string;
-    dueDate: string;
-    status: string;
-}
+	interface Payment {
+		id: string;
+		amount: number;
+		dueDate: string;
+		status: 'PENDING' | 'PAID' | 'OVERDUE';
+		bookingId?: string;
+	}
 
-    // New transaction form data
-    let newTransaction = $state({
-        paymentFrom: '',
-        amount: '',
-        unit: '',
-        dueDate: '',
-        status: 'pending'
-    });
+	function mapPaymentToTransaction(payment: Payment): Transaction {
+		return {
+			id: payment.id,
+			paymentFrom: payment.bookingId || '',
+			amount: payment.amount.toString(),
+			unit: '',
+			dueDate: new Date(payment.dueDate).toISOString().split('T')[0],
+			status: mapStatusToFrontend(payment.status)
+		};
+	}
 
-    const timeFrames = [
-        { value: '30', label: 'Last 30 days' },
-        { value: '60', label: 'Last 60 days' },
-        { value: '90', label: 'Last 90 days' },
-        { value: 'all', label: 'All time' }
-    ];
+	function mapStatusToFrontend(status: string): Transaction['status'] {
+		switch (status) {
+			case 'PAID':
+				return 'paid';
+			case 'PENDING':
+				return 'pending';
+			default:
+				return 'not_paid';
+		}
+	}
 
-    let selectedTimeFrame = $state(timeFrames[0]);
+	let transactions: Transaction[] = [];
+	let loading = true;
+	let error: string | null = null;
+	let selectedTransactions: string[] = [];
 
-    $effect(() => {
-        if (searchTerm) {
-            console.log('Searching for: ', searchTerm);
-        }
-    })
+	let currentPage = 1;
+	let itemsPerPage = 10;
+	$: paginatedTransactions = transactions.slice(
+		(currentPage - 1) * itemsPerPage,
+		currentPage * itemsPerPage
+	);
+	$: totalPages = Math.ceil(transactions.length / itemsPerPage);
 
-    // Status options for the form
-    const statusOptions = [
-        { value: 'pending', name: 'Pending' },
-        { value: 'paid', name: 'Paid' },
-        { value: 'not_paid', name: 'Not Yet Paid' },
-    ];
+	async function fetchTransactions() {
+		try {
+			const response = await paymentService.getDuePaymentsThisMonth();
+			transactions = response.payments.map(mapPaymentToTransaction);
+			loading = false;
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'An unknown error occurred';
+			loading = false;
+		}
+	}
 
-    // Handle form submission
-    function handleSubmit() {
-        // Add your logic to save the transaction
-        console.log('New transaction:', newTransaction);
-        showModal = false;
-        // Reset form
-        newTransaction = {
-            paymentFrom: '',
-            amount: '',
-            unit: '',
-            dueDate: '',
-            status: 'pending'
-        };
-    }
+	function toggleTransaction(transactionId: string) {
+		selectedTransactions = selectedTransactions.includes(transactionId)
+			? selectedTransactions.filter((id) => id !== transactionId)
+			: [...selectedTransactions, transactionId];
+	}
 
-    function handleEdit(transaction) {
-    editingTransaction = {
-        paymentFrom: transaction.paymentFrom,
-        amount: transaction.amount,
-        unit: transaction.unit,
-        dueDate: transaction.dueDate,
-        status: transaction.status
-    };
-    showEditModal = true;
-}
+	function getStatusColor(status: string): string {
+		switch (status) {
+			case 'paid':
+				return '#10b981';
+			case 'not_paid':
+				return '#ef4444';
+			case 'pending':
+				return '#fbbf24';
+			default:
+				return '#6b7280';
+		}
+	}
 
-    function handleEditSubmit(){
-        console.log('Updating transaction:', editingTransaction);
-        showEditModal = false;
-    }
+	async function updateTransactionStatus(transactionId: string) {
+		try {
+			await paymentService.markPaymentAsPaid(transactionId);
+			await fetchTransactions();
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'An unknown error occurred';
+		}
+	}
 
-    type PageItem = {
-        name: number | string;
-        href: string;
-        active?: boolean;
-        disabled?: boolean;
-    }
-    const activeUrl = $derived($page?.url?.searchParams?.get('page') ?? '1');
-    let pages = [
-        { name: 1, href: '/transactions?page=1', active: false },
-        { name: 2, href: '/transactions?page=2' },
-        { name: 3, href: '/transactions?page=3' },
-        { name: '...', href: '/transactions?page=...', disabled: true },
-        { name: 100, href: '/transactions?page=100' }
-    ];
-
-    $effect(() => {
-        pages.forEach((page) => {
-            let splitUrl = page.href.split('?');
-            let queryString = splitUrl.slice(1).join('?');
-            const hrefParams = new URLSearchParams(queryString);
-            let hrefValue = hrefParams.get('page');
-            if (hrefValue === activeUrl) {
-                page.active = true;
-            } else {
-                page.active = false;
-            }
-        });
-    });
-
-    const helper = $state({
-        start: 1,
-        end: 10,
-        total: 1000
-    })
+	// Initial fetch
+	fetchTransactions();
 </script>
 
-<div class="h-screen flex flex-col">
-<div class="max-w-7xl mx-auto w-full flex flex-col flex-1 px-8 py-6">
-<!-- Search, Filter, and New Transaction Controls -->
-<div class="flex justify-between items-center mb-4">
-    <div class="flex items-center gap-4">
-        <div class="">
-            <Button id="timeFrameDropdown" outline color="dark" >
-                {selectedTimeFrame.label}
-                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-            </Button>
-            <Dropdown triggeredBy="#timeFrameDropdown">
-                {#each timeFrames as timeFrame}
-                    <DropdownItem on:click={() => selectedTimeFrame = timeFrame}>
-                        {timeFrame.label}
-                    </DropdownItem>
-                {/each}
-            </Dropdown>
-        </div>
-        <Button color="yellow" on:click={() => showModal = true}>
-            New Transaction
-        </Button>
-    </div>
-    
-    <div class="w-72">
-        <Search 
-            bind:value={searchTerm} 
-            placeholder="Search transactions..."
-            size="md"
-        />
-    </div>
+<div class="transactions-content">
+	<div class="controls-header">
+		<div class="left-controls">
+			<input type="text" placeholder="Search transactions" class="search-input" />
+		</div>
+	</div>
+
+	<div class="table-container">
+		{#if loading}
+			<div>Loading transactions...</div>
+		{:else if error}
+			<div>{error}</div>
+		{:else}
+			<table class="transactions-table">
+				<thead>
+					<tr>
+						<th><input type="checkbox" /></th>
+						<th>TRANSACTION</th>
+						<th>DATE</th>
+						<th>UNIT</th>
+						<th>AMOUNT</th>
+						<th>STATUS</th>
+						<th>ACTION</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each paginatedTransactions as transaction}
+						<tr>
+							<td>
+								<input
+									type="checkbox"
+									checked={selectedTransactions.includes(transaction.id || '')}
+									on:change={() => transaction.id && toggleTransaction(transaction.id)}
+								/>
+							</td>
+							<td>{transaction.paymentFrom}</td>
+							<td>{transaction.dueDate}</td>
+							<td>{transaction.unit}</td>
+							<td>${transaction.amount}</td>
+							<td style="color: {getStatusColor(transaction.status)}">
+								{transaction.status}
+							</td>
+							<td>
+								<button
+									class="btn btn-edit"
+									on:click={() => transaction.id && updateTransactionStatus(transaction.id)}
+								>
+									Edit
+								</button>
+								<button
+									class="btn btn-delete"
+									on:click={() => transaction.id && updateTransactionStatus(transaction.id)}
+								>
+									Delete
+								</button>
+							</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		{/if}
+	</div>
+
+	<div class="pagination-container">
+		<div class="pagination-info">
+			Showing
+			<span>{(currentPage - 1) * itemsPerPage + 1}</span>
+			to
+			<span>{Math.min(currentPage * itemsPerPage, transactions.length)}</span>
+			of
+			<span>{transactions.length}</span> entries
+		</div>
+		<div class="pagination-controls">
+			{#each Array(totalPages) as _, i}
+				<button
+					class="pagination-btn {currentPage === i + 1 ? 'active' : ''}"
+					on:click={() => (currentPage = i + 1)}
+				>
+					{i + 1}
+				</button>
+			{/each}
+		</div>
+	</div>
 </div>
 
-<!-- New Transaction Modal -->
-<Modal bind:open={showModal} size="md" autoclose={false}>
-    <div class="text-center">
-        <h3 class="mb-6 text-lg font-medium text-gray-900 dark:text-white">New Transaction</h3>
-    </div>
-    <form on:submit={handleSubmit} class="space-y-6">
-        <div>
-            <Label for="paymentFrom" class="mb-2">Payment From</Label>
-            <Input
-                id="paymentFrom"
-                placeholder="Enter name or reference number"
-                bind:value={newTransaction.paymentFrom}
-                required
-            />
-        </div>
-        
-        <div>
-            <Label for="amount" class="mb-2">Amount</Label>
-            <Input
-                id="amount"
-                type="number"
-                placeholder="Enter amount"
-                bind:value={newTransaction.amount}
-                required
-            />
-        </div>
-        
-        <div>
-            <Label for="unit" class="mb-2">Unit</Label>
-            <Input
-                id="unit"
-                type="number"
-                placeholder="Enter unit number"
-                bind:value={newTransaction.unit}
-                required
-            />
-        </div>
-        
-        <div>
-            <Label for="dueDate" class="mb-2">Due Date</Label>
-            <Input
-                id="dueDate"
-                type="date"
-                bind:value={newTransaction.dueDate}
-                required
-            />
-        </div>
-        
-        <div>
-            <Label for="status" class="mb-2">Status</Label>
-            <Select
-                id="status"
-                bind:value={newTransaction.status}
-                items={statusOptions}
-                required
-            />
-        </div>
+<style>
+	.transactions-content {
+		max-width: 1280px;
+		margin: 0 auto;
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+		padding: 1.5rem 2rem;
+	}
 
-        <div class="flex justify-end gap-4">
-            <Button color="alternative" on:click={() => showModal = false}>
-                Cancel
-            </Button>
-            <Button type="submit" color="yellow">
-                Save Transaction
-            </Button>
-        </div>
-    </form>
-</Modal>
+	.controls-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 1rem;
+	}
 
-<div class="flex-1 min-h-0 overflow-auto shadow-sm">
+	.search-input {
+		width: 18rem;
+		padding: 0.5rem 1rem;
+		border: 1px solid #ccc;
+		border-radius: 0.375rem;
+	}
 
-<Table hoverable={true}>
-    <TableHead>
-        <TableHeadCell class="!p-4">
-            <Checkbox />
-        </TableHeadCell>
-        <TableHeadCell>TRANSACTION</TableHeadCell>
-        <TableHeadCell>DATE & TIME</TableHeadCell>
-        <TableHeadCell>AMOUNT</TableHeadCell>
-        <TableHeadCell>UNIT</TableHeadCell>
-        <TableHeadCell>DUE DATE</TableHeadCell>
-        <TableHeadCell>STATUS</TableHeadCell>
-        <TableHeadCell>ACTION</TableHeadCell>
-    </TableHead>
-    <TableBody tableBodyClass="divide-y">
-        <TableBodyRow>
-            <TableBodyCell class="!p-4">
-                <Checkbox />
-            </TableBodyCell>
-            <TableBodyCell>Payment from Bonnie Green</TableBodyCell>
-            <TableBodyCell>Apr 23, 2021</TableBodyCell>
-            <TableBodyCell>$2300</TableBodyCell>
-            <TableBodyCell>1</TableBodyCell>
-            <TableBodyCell>Apr 23, 2021</TableBodyCell>
-            <TableBodyCell>
-                <span class="text-green-600">Paid</span>
-            </TableBodyCell>
-            <TableBodyCell>
-                <Button color="green" on:click={() => handleEdit({
-                    paymentFrom: 'Bonnie Green',
-                    amount: '2300',
-                    unit: '1',
-                    dueDate: '2021-04-23',
-                    status: 'paid'
-                })}>Edit</Button>
-                <Button color="red">Delete</Button>
-            </TableBodyCell>
-        </TableBodyRow>
-        <!-- Add more rows as needed -->
-    </TableBody>
-</Table>
+	.table-container {
+		flex: 1;
+		min-height: 0;
+		overflow: auto;
+		box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+	}
 
-<Modal bind:open={showEditModal} size="md" autoclose={false}>
-    <div class="text-center">
-        <h3 class="mb-6 text-lg font-medium text-gray-900 dark:text-white">Edit Transaction</h3>
-    </div>
-    <form on:submit|preventDefault={handleEditSubmit} class="space-y-6">
-        <div>
-            <Label for="editPaymentFrom" class="mb-2">Payment From</Label>
-            <Input
-                id="editPaymentFrom"
-                placeholder="Enter name or reference number"
-                bind:value={editingTransaction.paymentFrom}
-                required
-            />
-        </div>
-        
-        <div>
-            <Label for="editAmount" class="mb-2">Amount</Label>
-            <Input
-                id="editAmount"
-                type="number"
-                placeholder="Enter amount"
-                bind:value={editingTransaction.amount}
-                required
-            />
-        </div>
-        
-        <div>
-            <Label for="editUnit" class="mb-2">Unit</Label>
-            <Input
-                id="editUnit"
-                type="number"
-                placeholder="Enter unit number"
-                bind:value={editingTransaction.unit}
-                required
-            />
-        </div>
-        
-        <div>
-            <Label for="editDueDate" class="mb-2">Due Date</Label>
-            <Input
-                id="editDueDate"
-                type="date"
-                bind:value={editingTransaction.dueDate}
-                required
-                />
-            </div>
-            
-            <div>
-                <Label for="editStatus" class="mb-2">Status</Label>
-                <Select
-                    id="editStatus"
-                    bind:value={editingTransaction.status}
-                    items={statusOptions}
-                    required
-                />
-            </div>
-    
-            <div class="flex justify-end gap-4">
-                <Button color="alternative" on:click={() => showEditModal = false}>
-                    Cancel
-                </Button>
-                <Button type="submit" color="yellow">
-                    Save Changes
-                </Button>
-            </div>
-        </form>
-    </Modal>
-</div>
+	.transactions-table {
+		width: 100%;
+		border-collapse: collapse;
+	}
 
-<div class="py-6">
-<div class="flex justify-between items-center mt-4">
-    <div class="text-sm text-gray-700 dark:text-gray-400">
-        Showing 
-        <span class="font-semibold text-gray-900 dark:text-white">{helper.start}</span>
-        to
-        <span class="font-semibold text-gray-900 dark:text-white">{helper.end}</span>
-        of
-        <span class="font-semibold text-gray-900 dark:text-white">{helper.total}</span>
-        Entries
-    </div>
+	.transactions-table thead {
+		position: sticky;
+		top: 0;
+		background-color: #f9fafb;
+	}
 
-    <Pagination table>
-        <span slot="prev">Prev</span>
-    </Pagination>
-</div>
-</div>
-</div>
-</div>
+	.transactions-table th,
+	.transactions-table td {
+		padding: 1rem;
+		text-align: left;
+		border-bottom: 1px solid #e5e7eb;
+	}
+
+	.transactions-table th {
+		font-weight: 600;
+		text-transform: uppercase;
+		color: #6b7280;
+	}
+
+	.btn {
+		padding: 0.5rem 1rem;
+		border-radius: 0.375rem;
+		border: none;
+		cursor: pointer;
+	}
+
+	.btn-edit {
+		background-color: #10b981;
+		color: white;
+		margin-right: 0.5rem;
+	}
+
+	.btn-delete {
+		background-color: #ef4444;
+		color: white;
+	}
+
+	.pagination-container {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 1.5rem 0;
+	}
+
+	.pagination-info {
+		color: #6b7280;
+	}
+
+	.pagination-info span {
+		font-weight: 600;
+		color: #111827;
+		margin: 0 0.25rem;
+	}
+
+	.pagination-controls {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.pagination-btn {
+		padding: 0.5rem 1rem;
+		border: 1px solid #e5e7eb;
+		background-color: white;
+		border-radius: 0.375rem;
+		cursor: pointer;
+	}
+
+	.pagination-btn.active {
+		background-color: #fbbf24;
+		color: white;
+	}
+
+	.pagination-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+</style>
